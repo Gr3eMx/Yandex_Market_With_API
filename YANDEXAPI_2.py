@@ -3,8 +3,8 @@ import json
 from bs4 import BeautifulSoup
 import pymysql
 from datetime import datetime, timedelta
-sku_id = ['']
 
+sku_id = ['']
 now = datetime.now().date()
 dateFrom = str(now - timedelta(days=1))
 headers = {
@@ -12,6 +12,7 @@ headers = {
     'Accept-Language': 'en-en,ru;q=0.8,en-us;q=0.5,en;q=0.3',
     'Connection': 'keep-close',
     'Authorization': 'OAuth oauth_token="", oauth_client_id=""'}
+
 def count_sells_yesterday(dateFrom,dateTO):
     body = {
       "dateFrom": dateFrom,
@@ -27,7 +28,7 @@ def count_sells_yesterday(dateFrom,dateTO):
     reques = requests.post('https://api.partner.market.yandex.ru/v2/campaigns/21962613/stats/orders.json', jsonBody, headers=headers)
     print(reques.text)
     with open('yandex1_2.json', 'w', encoding='utf-8') as file:
-        json.dump(reques.json(), file, ensure_ascii=4, indent=4)
+        json.dump(reques.json(), file, ensure_ascii=False, indent=4)
     with open('yandex1_2.json', encoding='utf-8') as file:
         file_content = file.read()
     soup = BeautifulSoup(file_content, 'html.parser')
@@ -38,15 +39,13 @@ def count_sells_yesterday(dateFrom,dateTO):
                 for z in i['items']:
                     if sku in z['shopSku']:
                         count_sells_sht[sku] += z['count']
-
     return count_sells_sht
-def count_sells_rub():
 
+def count_sells_rub():
     with open('yandex1_2.json', encoding='utf-8') as file:
         file_content = file.read()
     soup = BeautifulSoup(file_content, 'html.parser')
     site_json = json.loads(soup.text)
-
     count_sells_sht = {id : 0 for id in sku_id}
     for sku in sku_id:
         for i in site_json['result']['orders']:
@@ -54,8 +53,6 @@ def count_sells_rub():
                     for k in z['prices']:
                         if sku in z['shopSku']:
                             count_sells_sht[sku] += k['total']
-
-
     return count_sells_sht
 
 def count_canselled_items(dateFrom,dateTO):
@@ -75,7 +72,7 @@ def count_canselled_items(dateFrom,dateTO):
     reques = requests.post('https://api.partner.market.yandex.ru/v2/campaigns/21962613/stats/orders.json', jsonBody, headers=headers)
 
     with open('yandex_2.json', 'w', encoding='utf-8') as file:
-        json.dump(reques.json(), file, ensure_ascii=4, indent=4)
+        json.dump(reques.json(), file, ensure_ascii=False, indent=4)
     with open('yandex_2.json', encoding='utf-8') as file:
         file_content = file.read()
     soup = BeautifulSoup(file_content, 'html.parser')
@@ -87,6 +84,7 @@ def count_canselled_items(dateFrom,dateTO):
                 if sku in z['shopSku']:
                     count_cansellde[sku] += z['count']
     return count_cansellde
+
 def count_returned(dateFrom,dateTO):
     body = {
         "dateFrom": dateFrom,
@@ -98,11 +96,11 @@ def count_returned(dateFrom,dateTO):
                 "RETURNED",
             ]
     }
+    
     jsonBody = json.dumps(body, ensure_ascii=False).encode('utf-8')
     reques = requests.post('https://api.partner.market.yandex.ru/v2/campaigns/21962613/stats/orders.json', jsonBody, headers=headers)
-
     with open('yandex2_2.json', 'w', encoding='utf-8') as file:
-        json.dump(reques.json(), file, ensure_ascii=4, indent=4)
+        json.dump(reques.json(), file, ensure_ascii=False, indent=4)
     with open('yandex2_2.json', encoding='utf-8') as file:
         file_content = file.read()
     soup = BeautifulSoup(file_content, 'html.parser')
@@ -121,9 +119,8 @@ def count_sklad():
 }
     jsonBody = json.dumps(body, ensure_ascii=False).encode('utf-8')
     reques = requests.post('https://api.partner.market.yandex.ru/v2/campaigns/21962613/stats/skus.json', jsonBody, headers=headers)
-
     with open('yandex3_2.json', 'w', encoding='utf-8') as file:
-        json.dump(reques.json(), file, ensure_ascii=4, indent=4)
+        json.dump(reques.json(), file, ensure_ascii=False, indent=4)
     with open('yandex3_2.json', encoding='utf-8') as file:
         file_content = file.read()
     soup = BeautifulSoup(file_content, 'html.parser')
@@ -138,7 +135,6 @@ def count_sklad():
         if l not in count_items_sklad:
             count_items_sklad[l] = 0
     return count_items_sklad
-
 
 def insert_in_DB():
     connection = pymysql.connect()
@@ -215,7 +211,7 @@ def main():
             'count_sklad': count_sklad()[sku]
         })
     with open('data_yesterday_2.json', 'w', encoding='utf-8') as file:
-        json.dump(jso, file, ensure_ascii=4 ,indent=False)
+        json.dump(jso, file, ensure_ascii=False ,indent=False)
     insert_in_DB()
 
 if __name__ == "__main__":
